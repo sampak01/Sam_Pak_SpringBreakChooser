@@ -7,6 +7,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.net.Uri
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
@@ -26,6 +27,7 @@ import java.lang.Exception
 import java.util.Locale
 import java.util.Objects
 import kotlin.math.sqrt
+import kotlin.random.Random
 
 class MainActivity : AppCompatActivity(), OnItemSelectedListener, TextToSpeech.OnInitListener {
     private var textToSpeech: TextToSpeech? = null
@@ -76,13 +78,36 @@ class MainActivity : AppCompatActivity(), OnItemSelectedListener, TextToSpeech.O
 
             if (acceleration > 12) {
                 //Log.d("Sensors","Shake Detected")
-                when(languageSetting){
-                    0 -> textToSpeech!!.speak("Hello",TextToSpeech.QUEUE_FLUSH, null, null)
+                when (languageSetting) {
+                    0 -> textToSpeech!!.speak("Hello", TextToSpeech.QUEUE_FLUSH, null, null)
                     //english tts can handle hangul, no korean tts supported
-                    1 -> textToSpeech!!.speak("안녕하세요",TextToSpeech.QUEUE_FLUSH, null, null)
+                    1 -> textToSpeech!!.speak("안녕하세요", TextToSpeech.QUEUE_FLUSH, null, null)
                     //no tts for japanese, so we will use english tts
-                    2 -> textToSpeech!!.speak("konnichiwa",TextToSpeech.QUEUE_FLUSH, null, null)
+                    2 -> textToSpeech!!.speak("konnichiwa", TextToSpeech.QUEUE_FLUSH, null, null)
                 }
+                var gmmIntentUri = Uri.parse("geo:51.5072,0.1276")
+                val coin = Random.nextInt(0,1)
+                if(languageSetting == 0){
+                    if(coin == 0) {
+                        gmmIntentUri = Uri.parse("geo:51.5072,0.1276")
+                    }else{
+                        gmmIntentUri = Uri.parse("geo:36.1716,115.1391")
+                    }
+                }else if(languageSetting == 1){
+                    if(coin == 0) {
+                        gmmIntentUri = Uri.parse("geo:33.3846,126.5535")
+                    }else{
+                        gmmIntentUri = Uri.parse("geo:37.5519,126.9918")
+                    }
+                }else {
+                    if(coin == 0) {
+                        gmmIntentUri = Uri.parse("geo:35.6764,139.6500")
+                    }else{
+                        gmmIntentUri = Uri.parse("geo:34.6937,135.5023")
+                    }
+                }
+                val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+                startActivity(mapIntent)
             }
         }
         override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {}
