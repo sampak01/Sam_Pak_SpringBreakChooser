@@ -9,6 +9,7 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Bundle
 import android.speech.RecognizerIntent
+import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.View
 import android.widget.AdapterView
@@ -22,15 +23,18 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import java.lang.Exception
+import java.util.Locale
 import java.util.Objects
 import kotlin.math.sqrt
 
-class MainActivity : AppCompatActivity(), OnItemSelectedListener {
+class MainActivity : AppCompatActivity(), OnItemSelectedListener, TextToSpeech.OnInitListener {
+    private var textToSpeech: TextToSpeech? = null
     private val languageList = arrayOf<String>("English","한국어 (Korean)","日本語 (Japanese)")
     private var sensorManager: SensorManager? = null
     private var acceleration = 0f
     private var currentAcceleration = 0f
     private var lastAcceleration = 0f
+    private var languageSetting = 0
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -54,6 +58,8 @@ class MainActivity : AppCompatActivity(), OnItemSelectedListener {
         acceleration = 10f
         currentAcceleration = SensorManager.GRAVITY_EARTH
         lastAcceleration = SensorManager.GRAVITY_EARTH
+
+        textToSpeech = TextToSpeech(this,this)
     }
     private val sensorListener: SensorEventListener = object : SensorEventListener {
         override fun onSensorChanged(event: SensorEvent) {
@@ -67,9 +73,16 @@ class MainActivity : AppCompatActivity(), OnItemSelectedListener {
             val delta: Float = currentAcceleration - lastAcceleration
             acceleration = acceleration * 0.9f + delta
 
-            if (acceleration > 12) {
-                Log.d("Sensors","Shake Detected")
 
+            if (acceleration > 12) {
+                //Log.d("Sensors","Shake Detected")
+                when(languageSetting){
+                    0 -> textToSpeech!!.speak("Hello",TextToSpeech.QUEUE_FLUSH, null, null)
+                    //english tts can handle hangul, no korean tts supported
+                    1 -> textToSpeech!!.speak("안녕하세요",TextToSpeech.QUEUE_FLUSH, null, null)
+                    //no tts for japanese, so we will use english tts
+                    2 -> textToSpeech!!.speak("konnichiwa",TextToSpeech.QUEUE_FLUSH, null, null)
+                }
             }
         }
         override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {}
@@ -79,6 +92,8 @@ class MainActivity : AppCompatActivity(), OnItemSelectedListener {
     override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
 
         //Log.d("Spinner",position.toString())
+        textToSpeech = TextToSpeech(this,this)
+        languageSetting = position
         val languageSelector = findViewById<Spinner>(R.id.languageSelector)
         try {
             val speechIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
@@ -107,5 +122,21 @@ class MainActivity : AppCompatActivity(), OnItemSelectedListener {
     }
     override fun onNothingSelected(parent: AdapterView<*>?) {
 
+    }
+
+    override fun onInit(status: Int) {
+        if (status == TextToSpeech.SUCCESS) {
+            var currentLocale: Locale = Locale.ENGLISH
+            //korean and japanese tts not available so unable to test.
+            /*when(languageSetting){
+                0 -> currentLocale = Locale.ENGLISH
+                1 -> currentLocale = Locale.KOREAN
+                2 -> currentLocale = Locale.JAPANESE
+            }*/
+            val result = textToSpeech!!.setLanguage(currentLocale)
+            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                Log.e("TTS","The Language not supported!")
+            }
+        }
     }
 }
