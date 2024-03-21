@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Sam_Pak_SpringBreakChooser</string>
+    <string name="editText">Your Text Goes Here</string>
 </resources>
